@@ -17,8 +17,16 @@ def home():
 def run_query():
     try:
         request_data = QueryRequest(**request.get_json()) .model_dump()
-        print("Received request data:", request_data['query'])
         return jsonify({'query': request_data['query']})
+    except ValidationError as error:
+        return jsonify(error.errors()), 400
+
+@app.route("/ask_perplexity", methods=["POST"])
+def ask_perplexity():
+    try:
+        request_data = QueryRequest(**request.get_json()).model_dump()
+        response = talk_to_perplexity(request_data['query'])
+        return jsonify(response)
     except ValidationError as error:
         return jsonify(error.errors()), 400
 
