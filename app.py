@@ -1,6 +1,6 @@
 from flask import Blueprint, Flask, jsonify, request
 from pydantic import BaseModel, ValidationError
-from app.perplexity import talk_to_perplexity
+from llm_connections.perplexity import talk_to_perplexity
 
 app = Flask(__name__)
 
@@ -26,6 +26,16 @@ def ask_perplexity():
     try:
         request_data = QueryRequest(**request.get_json()).model_dump()
         response = talk_to_perplexity(request_data['query'])
+        return jsonify(response)
+    except ValidationError as error:
+        return jsonify(error.errors()), 400
+
+@app.route("/ask_chatgpt", methods=["POST"])
+def ask_chatgpt():
+    try:
+        request_data = QueryRequest(**request.get_json()).model_dump()
+        from llm_connections.openai import talk_to_openai
+        response = talk_to_openai(request_data['query'])
         return jsonify(response)
     except ValidationError as error:
         return jsonify(error.errors()), 400
